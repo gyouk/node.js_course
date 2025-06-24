@@ -65,7 +65,7 @@ Folder-based router à la Next .js App Router для простого REST-API (
 
 │       ├─ route.js      (GET /users, POST /users)
 
-│       └─ [id]/
+│       └─ [anything]/
 
 │           └─ route.js  (GET, PUT, DELETE /users/:id)
 
