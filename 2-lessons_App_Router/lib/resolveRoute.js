@@ -31,12 +31,24 @@ export async function resolveRoute(segments, routesDir = path.join(__dirname, '.
     let params = {};
     for (const seg of segments) {
         const staticDir = path.join(currentPath, seg);
-        const dynamicDir = path.join(currentPath, '[id]');
+
+        let dynamicDir = [];
+        try {
+            dynamicDir = (await fs.readdir(currentPath, { withFileTypes: true }))
+                .filter(dirent => dirent.isDirectory())
+                .map(dirent =>dirent.name);
+        } catch (error) {
+            console.error(`Error reading directory ${currentPath}:`, error);
+            return {file: null, params: {} };
+        }
+        const dynamicDirName =  dynamicDir.find(dirent => dirent.startsWith('[') && dirent.endsWith(']'));
+
         if (await exists(staticDir)) {
             currentPath = staticDir;
-        } else if (await exists(dynamicDir)) {
-            currentPath = dynamicDir;
-            params.id = seg;
+        } else if (dynamicDirName) {
+            currentPath = path.join(currentPath, dynamicDirName);
+            const paramName = dynamicDirName.slice(1, -1);
+            params[paramName] = seg;
         } else {
         return {file: null, params: {} };
     }
