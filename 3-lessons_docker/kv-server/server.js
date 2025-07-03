@@ -1,66 +1,45 @@
+import express from 'express';
 
-import http from 'http';
-
+const app = express();
+const PORT = process.env.PORT || 3000;
 const REDIS_URL = process.env.REDIS_URL || 'http://localhost:4000';
 
-/**
- * Fetch data from the Redis-like server
- * @param path
- * @param options
- * @returns {Promise<unknown>}
- */
-function fetchRedis(path, options = {}) {
-    return new Promise((resolve, reject) => {
-        const url = new URL(path, REDIS_URL);
-        const opts = {
-            method: options.method || 'GET',
-            headers: options.headers || {},
-        };
-
-        const req = http.request(url, opts, res => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => resolve({ status: res.statusCode, json: () => Promise.resolve(JSON.parse(data)) }));
-        });
-
-        req.on('error', reject);
-
-        if (options.body) req.write(options.body);
-        req.end();
-    });
-}
+app.use(express.json());
 
 /**
- * A simple key-value server that interacts with a Redis-like server.
- * @typedef {import('http').IncomingMessage} IncomingMessage
- * @type {Server<typeof IncomingMessage, typeof ServerResponse>}
+ * Endpoint to get a value by key from the Redis-like server.
  */
-const server = http.createServer(async (req, res) => {
-    if (req.method === 'GET' && req.url.startsWith('/kv/')) {
-        const key = req.url.split('/').pop();
-        const resp = await fetchRedis(`/get?key=${encodeURIComponent(key)}`);
-        const data = await resp.json();
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(data));
-    }
-    else if (req.method === 'POST' && req.url === '/kv') {
-        let body = '';
-        req.on('data', chunk => body += chunk);
-        req.on('end', async () => {
-            const resp = await fetchRedis('/set', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: body
-            });
-            const data = await resp.json();
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(data));
-        });
-    }
-    else {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Not found' }));
+app.get('/kv/:key', async (req, res) => {
+    try {
+        const key = encodeURIComponent(req.params.key);
+        const response = await fetch(`${REDIS_URL}/get?key=${key}`);
+        const data = await response.json();
+        res.status(response.status).json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to connect to Redis' });
     }
 });
 
-server.listen(3000, () => console.log('KV-server running on 3000'));
+/**
+ * Endpoint to set a key-value pair in the Redis-like server.
+ */
+app.post('/kv', async (req, res) => {
+    try {
+        const response = await fetch(`${REDIS_URL}/set`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.status(response.status).json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to connect to Redis' });
+    }
+})
+
+
+app.listen(PORT, () => {
+
+    console.log(`KV-server running on http://localhost:${PORT}`);
+    console.log(`Redis-like server should be running on ${REDIS_URL}`);
+});
