@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
+import container from "./di/container.js";
 
 import { openApiDocument } from "./openapi/swagger.js";
 import brewRoutes from "./routes/brew.routes.js";
@@ -11,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use("/api/brews", brewRoutes);
+app.use("/api/brews", brewRoutes({ brewController: container.resolve('brewController') }));
 
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));

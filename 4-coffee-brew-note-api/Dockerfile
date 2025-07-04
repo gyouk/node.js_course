@@ -1,23 +1,32 @@
-# === Build stage ===
-FROM alpine:3.19 AS builder
+# 1. BUILD STAGE
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Копіюємо package.json і package-lock.json (або yarn.lock)
 COPY package*.json ./
-RUN apk add --no-cache nodejs tini
-
-# Копіюємо лише код (уникаємо зайвих файлів, напр. .git, node_modules тощо)
+RUN npm ci --omit=dev
 COPY src ./src
+COPY build.mjs ./
+RUN node build.mjs
 
-# === Production (slim) stage ===
-FROM node:20-alpine
-
+# 2. PROD STAGE
+FROM node:20-alpine AS prod
 WORKDIR /app
-
-# Копіюємо лише node_modules з builder stage
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/src ./src
 COPY package*.json ./
+RUN npm ci --omit=dev
+
+# 3. FINAL RUNTIME STAGE (навіть ще легший Alpine)
+FROM alpine:3.20
+RUN apk add --no-cache nodejs tini
+RUN adduser -D -h /home/node node
+
+USER node
+WORKDIR /home/node
+
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
+
+ENV NODE_ENV=production
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "./dist/server.mjs"]
 
 EXPOSE 3000
-CMD ["node", "src/server.js"]

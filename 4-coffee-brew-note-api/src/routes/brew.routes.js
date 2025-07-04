@@ -5,7 +5,7 @@ import rateLimiter from '../middlewares/rateLimit.js';
 
 const brewRoutes = ({ brewController }) => {
     const router = express.Router();
-
+    console.log('brewController', brewController);
     router.get('/', brewController.getAll);
     router.get('/:id', brewController.getById);
     router.post('/', rateLimiter, validate(BrewDTO), brewController.create);

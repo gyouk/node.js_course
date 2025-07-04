@@ -1,19 +1,19 @@
 import esbuild from 'esbuild';
 
 esbuild.build({
-    entryPoints: ['src/server.js'], // Ваша точка входу (можна змінити за потреби)
+    entryPoints: ['src/server.js'],
     bundle: true,
     platform: 'node',
-    target: 'node22',         // або node20, залежно від вашої версії Node.js
+    target: 'node20',
     outdir: 'dist',
-    format: 'esm',            // якщо ви використовуєте import/export (ESM)
-    sourcemap: true,          // (опційно, для дебагу)
-    minifySyntax: true,             // мінімізує код
+    format: 'esm',
+    sourcemap: false,
+    minifySyntax: true,
     minifyWhitespace: true,
-    minifyIdentifiers: false,       // зберігаємо імена змінних/функцій
-    treeShaking: true,              // видаляємо невикористовуваний код
-    legalComments: 'none',          // прибираємо коментарі
-    external: [               // не бандлити залежності (Node.js сам підтягує з node_modules)
+    minifyIdentifiers: false,
+    treeShaking: true,
+    legalComments: 'none',
+    external: [
         'express',
         'awilix',
         'zod',
