@@ -41,5 +41,4 @@ app.post('/kv', async (req, res) => {
 app.listen(PORT, () => {
 
     console.log(`KV-server running on http://localhost:${PORT}`);
-    console.log(`Redis-like server should be running on ${REDIS_URL}`);
 });

@@ -3,8 +3,8 @@
 ## Опис
 
 Завдання: повністю контейнеризувати два Node.js-сервіси:
-- **redis-like** — простий key/value HTTP-сервер 
-- **kv-server** — сервіс-клієнт, який використовує redis-like як сховище даних.
+- **redis-like** — простий  key/value HTTP-сервер 
+- **kv-server** — сервіс-клієнт на Express, який використовує redis-like як сховище даних.
 
 ---
 
@@ -12,22 +12,37 @@
 
 3-lessons_docker/
 ├── docker-compose.yml
+├── docker-compose.prod.yml
 |──README.md
 ├── kv-server/
 │ ├── server.js
-│ └── Dockerfile
+│ └── Dockerfile.kv
+│ └── Dockerfile.kv.dev
+│ └── package.json
+│ └── eslint.config.js
 └── redis-like/
 ├── server.js
-└── Dockerfile
+└── Dockerfile.redis
+└── package.json
+└── eslint.config.js
 
 ---
 
 ## Швидкий старт
 
 ### 1. Побудова та запуск контейнерів
+1. Запустити Docker Compose для розробки:
+ ``` bash
+  docker compose up --build
+  ```
+ 1.1. Перевірити, що обидва сервіси запущені:
+   - redis-like на http://localhost:4000
+   - kv-server на http://localhost:8080
 
+### 2. Запуск у продакшн-режимі
 ``` bash
-docker compose up --build
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+
 ```
 2. Тестування API
 Додати ключ:

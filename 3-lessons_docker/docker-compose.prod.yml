@@ -11,7 +11,7 @@ services:
   kv:
     build:
       context: ./kv-server
-      dockerfile: Dockerfile.kv.dev
+      dockerfile: Dockerfile.kv
     ports:
       - "8080:3000"
     environment:
